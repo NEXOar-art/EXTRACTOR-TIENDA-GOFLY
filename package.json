@@ -1,0 +1,17 @@
+{
+  "name": "goflymx-catalog-extractor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Extractor de tipo, producto, stock y descripción del catálogo GoFlyMX",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^4.21.2"
+  }
+}
