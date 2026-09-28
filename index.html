@@ -1,116 +1,309 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Extractor de catálogo GoFlyMX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stock bajo · GoFly MX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0d10;--card:#14181d;--line:#29313a;--txt:#eef2f5;--muted:#9ba7b2;--accent:#e53935;--ok:#35c759}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#090b0e,#151a20);color:var(--txt);font:14px Arial,sans-serif}
-.wrap{max-width:1500px;margin:auto;padding:24px}.card{background:rgba(20,24,29,.96);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 15px 45px #0007}
-h1{margin:0 0 6px;font-size:28px}.sub{color:var(--muted);margin-bottom:20px}
-.grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}.field label{display:block;color:var(--muted);margin-bottom:6px;font-size:12px}.field input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#0d1115;color:white}
-.buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}button{border:0;border-radius:10px;padding:12px 16px;background:#252c34;color:#fff;cursor:pointer;font-weight:700}button.primary{background:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}
-.status{margin-top:16px;padding:12px;border-radius:10px;background:#0d1115;border:1px solid var(--line);color:#cbd4dc;white-space:pre-wrap}
-.progress{height:8px;background:#20262d;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:var(--accent);transition:width .2s}
-.stats{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0;color:var(--muted)}.stats b{color:#fff}
-.tablewrap{margin-top:18px;overflow:auto;max-height:65vh;border:1px solid var(--line);border-radius:12px}
-table{border-collapse:collapse;width:100%;min-width:900px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{position:sticky;top:0;background:#191f26;z-index:1}td:nth-child(4){min-width:420px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#20272f;color:#dce4ea}.ok{color:var(--ok)}.warn{color:#ffcc66}
-.small{font-size:12px;color:var(--muted);margin-top:12px}
-@media(max-width:900px){.grid{grid-template-columns:1fr}.wrap{padding:12px}}
+:root{
+  --bg:#e9edf1; --panel:#ffffff; --ink:#18212b; --mute:#5d6b7a; --line:#d3dae1;
+  --zero:#b3261e; --zero-bg:#fbe4e2; --one:#8a5a00; --one-bg:#fff0cf; --ok:#1d6b45;
+  --focus:#1c5fd1;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#12171d; --panel:#1b232c; --ink:#e7ecf1; --mute:#93a1b0; --line:#2c3743;
+    --zero:#ff8b82; --zero-bg:#3a1d1b; --one:#f0c25f; --one-bg:#3a2e12; --ok:#6fd1a0; --focus:#7aa7ff;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--mute);font-size:13px;margin-top:2px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:500}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button:disabled{opacity:.55;cursor:wait}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.bar{display:flex;flex-wrap:wrap;gap:20px;padding:12px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--mute)}
+.bar b{color:var(--ink);font-family:"IBM Plex Mono",monospace;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:600;color:var(--mute)}
+td.code{font-family:"IBM Plex Mono",monospace;font-weight:500;white-space:nowrap}
+td.stock{width:90px}
+.pill{display:inline-block;min-width:34px;text-align:center;padding:2px 10px;border-radius:999px;font-family:"IBM Plex Mono",monospace;font-weight:600}
+.s0{background:var(--zero-bg);color:var(--zero)}
+.s1{background:var(--one-bg);color:var(--one)}
+tr:last-child td{border-bottom:0}
+.empty{padding:40px 16px;text-align:center;color:var(--mute)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+.msg{margin-top:12px;padding:12px 16px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel)}
+.msg.err{border-color:var(--zero);color:var(--zero)}
+.msg ul{margin:6px 0 0;padding-left:18px;color:var(--ink)}
+details.cfg{margin-top:16px}
+details.cfg summary{cursor:pointer;padding:12px 16px;font-weight:600}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;padding:0 16px 16px}
+.grid .full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:600;color:var(--mute);margin-bottom:4px}
+input,select,textarea{width:100%;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+textarea{font-family:"IBM Plex Mono",monospace;font-size:13px;min-height:110px;resize:vertical}
+.hint{font-size:12px;color:var(--mute);margin-top:4px}
+.chk{display:flex;gap:8px;align-items:center}
+.chk input{width:auto}
+@media (max-width:640px){.grid{grid-template-columns:1fr} th,td{padding:10px 12px} td.code{white-space:normal}}
+@media (prefers-reduced-motion:no-preference){.spin{animation:pulse 1s ease-in-out infinite}@keyframes pulse{50%{opacity:.4}}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="card">
-<h1>Extractor de catálogo GoFlyMX</h1>
-<div class="sub">Extrae únicamente tipo/categoría, producto, stock y descripción. No guarda precios, códigos, marcas ni imágenes.</div>
+  <header>
+    <div>
+      <h1 id="title">Stock menor a 2 unidades</h1>
+      <div class="sub">GoFly MX · consulta el inventario real, no el "Min. Vta."</div>
+    </div>
+    <div class="actions">
+      <button id="demo" title="Solo para ver el formato">Ver ejemplo</button>
+      <button id="refresh" class="primary">Actualizar</button>
+    </div>
+  </header>
 
-<div class="grid">
-  <div class="field"><label>URL de origen</label><input id="origin" value="https://tienda.goflymx.com/"></div>
-  <div class="field"><label>Máximo de páginas</label><input id="maxPages" type="number" value="1000" min="10" max="10000"></div>
-  <div class="field"><label>Concurrencia</label><input id="concurrency" type="number" value="3" min="1" max="8"></div>
-</div>
+  <section class="panel" aria-live="polite">
+    <div class="bar">
+      <span>Última actualización: <b id="ts">—</b></span>
+      <span>Consultados: <b id="cq">0</b></span>
+      <span>Con stock bajo: <b id="cl">0</b></span>
+      <span>Sin dato numérico: <b id="cn">0</b></span>
+    </div>
+    <div id="out"><div class="empty"><b>Todavía no hay datos</b>Configurá el endpoint abajo y tocá Actualizar.</div></div>
+  </section>
 
-<div class="buttons">
-  <button class="primary" id="start">EXTRAER TODO EL CATÁLOGO</button>
-  <button id="stop" disabled>DETENER</button>
-  <button id="csv" disabled>DESCARGAR CSV</button>
-  <button id="json" disabled>DESCARGAR JSON</button>
-  <button id="clear">LIMPIAR</button>
-</div>
+  <div id="msg"></div>
 
-<div class="progress"><div class="bar" id="bar"></div></div>
-<div class="status" id="status">Listo. Iniciá la extracción.</div>
-<div class="stats">
-  <span>Páginas: <b id="pages">0</b></span>
-  <span>Productos: <b id="products">0</b></span>
-  <span>Errores: <b id="errors">0</b></span>
-</div>
-
-<div class="tablewrap">
-<table>
-<thead><tr><th>#</th><th>Tipo / categoría</th><th>Producto</th><th>Stock</th><th>Descripción</th></tr></thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
-<div class="small">La extracción se realiza mediante el servidor incluido. Respetá los términos de uso, robots.txt y límites razonables del sitio de origen.</div>
-</div>
+  <details class="panel cfg" id="cfg">
+    <summary>Configuración del endpoint</summary>
+    <div class="grid">
+      <div class="full">
+        <label for="url">URL del endpoint de inventario</label>
+        <input id="url" placeholder="https://tienda.goflymx.com/…  (usá {codigo} si consulta de a uno)">
+        <div class="hint">Con <code>{codigo}</code> hace un request por código. Sin él, hace un solo request y espera una lista.</div>
+      </div>
+      <div>
+        <label for="method">Método</label>
+        <select id="method"><option>GET</option><option>POST</option></select>
+      </div>
+      <div>
+        <label for="limit">Mostrar si stock es menor a</label>
+        <input id="limit" type="number" min="1" value="2">
+      </div>
+      <div class="full">
+        <label for="body">Cuerpo POST (opcional, también admite {codigo})</label>
+        <input id="body" placeholder='{"codigo":"{codigo}"}'>
+      </div>
+      <div class="full">
+        <label for="proxy">Proxy CORS (opcional)</label>
+        <input id="proxy" placeholder="https://mi-proxy.workers.dev/?url=">
+        <div class="hint">Si el navegador bloquea la consulta por CORS, pasá el request por un proxy tuyo. Se antepone a la URL.</div>
+      </div>
+      <div>
+        <label for="fcode">Campo código (opcional)</label>
+        <input id="fcode" placeholder="auto: codigo, code, sku…">
+      </div>
+      <div>
+        <label for="fstock">Campo stock (opcional)</label>
+        <input id="fstock" placeholder="auto: stock, cantidad, qty…">
+      </div>
+      <div>
+        <label for="fdesc">Campo descripción (opcional)</label>
+        <input id="fdesc" placeholder="auto: descripcion, nombre, title…">
+      </div>
+      <div>
+        <label for="auto">Auto-actualizar cada (segundos, 0 = no)</label>
+        <input id="auto" type="number" min="0" value="0">
+      </div>
+      <div class="full">
+        <label for="codes">Códigos a controlar (uno por línea)</label>
+        <textarea id="codes" placeholder="ABC123&#10;XYZ456&#10;KTKIT530-042"></textarea>
+        <div class="hint">Si el endpoint devuelve toda la lista, dejalo vacío para revisar todo el catálogo.</div>
+      </div>
+      <div class="full chk">
+        <input id="cred" type="checkbox"><label for="cred" style="margin:0">Enviar cookies de sesión (credentials: include)</label>
+      </div>
+      <div class="full"><button id="save" class="primary">Guardar y actualizar</button></div>
+    </div>
+  </details>
 </div>
 
 <script>
-const $=id=>document.getElementById(id);
-let rows=[], running=false, aborter=null;
+(() => {
+  const $ = id => document.getElementById(id);
+  const KEY = 'goflymx-stock-bajo-v1';
+  const CODE_KEYS  = ['codigo','código','code','sku','cod','item','itemcode','productcode','reference','ref','id'];
+  const STOCK_KEYS = ['stock','stockactual','stock_actual','cantidad','existencia','existencias','qty','quantity','available','disponible','disponibilidad','inventory','inventario','onhand','saldo','units','unidades'];
+  const DESC_KEYS  = ['descripcion','descripción','description','nombre','name','title','titulo','producto','detalle'];
+  const NOT_STOCK  = /min|max|vta|venta|precio|price|step|multiplo/i; // evita confundir "Min. Vta.: 1" con stock
 
-function status(t){$("status").textContent=t}
-function stats(p=0,e=0){$("pages").textContent=p;$("products").textContent=rows.length;$("errors").textContent=e}
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function render(){
-  $("tbody").innerHTML=rows.map((r,i)=>`<tr><td>${i+1}</td><td><span class="pill">${esc(r.tipo)}</span></td><td>${esc(r.producto)}</td><td class="${/dispon|stock|exist/i.test(r.stock)?'ok':'warn'}">${esc(r.stock)}</td><td>${esc(r.descripcion)}</td></tr>`).join("");
-  $("products").textContent=rows.length;
-}
-function download(name,text,type){
- const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));
- a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
-function csvText(){
- const head=["TIPO","PRODUCTO","STOCK","DESCRIPCION"];
- const q=v=>`"${String(v??"").replaceAll('"','""').replace(/\r?\n/g," ")}"`;
- return "\ufeff"+[head,...rows.map(r=>[r.tipo,r.producto,r.stock,r.descripcion])].map(a=>a.map(q).join(";")).join("\r\n");
-}
-async function run(){
- running=true;aborter=new AbortController();$("start").disabled=true;$("stop").disabled=false;
- $("csv").disabled=true;$("json").disabled=true;rows=[];render();stats();$("bar").style.width="0%";
- const origin=$("origin").value.trim().replace(/\/+$/,"");
- const maxPages=Number($("maxPages").value)||1000;
- const concurrency=Number($("concurrency").value)||3;
- let errors=0,pages=0;
- try{
-   status("Conectando con el extractor...");
-   const r=await fetch("/api/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({origin,maxPages,concurrency}),signal:aborter.signal});
-   if(!r.ok) throw new Error(await r.text());
-   const reader=r.body.getReader(), dec=new TextDecoder(); let buf="";
-   while(true){
-     const {value,done}=await reader.read(); if(done)break;
-     buf+=dec.decode(value,{stream:true});
-     const parts=buf.split("\n");buf=parts.pop();
-     for(const line of parts){
-       if(!line.trim())continue;
-       const msg=JSON.parse(line);
-       if(msg.type==="progress"){pages=msg.pages??pages;errors=msg.errors??errors;if(msg.total) $("bar").style.width=Math.min(100,msg.pages/msg.total*100)+"%";status(msg.message||"Extrayendo...");stats(pages,errors)}
-       if(msg.type==="product"){rows.push(msg.data);render();stats(pages,errors)}
-       if(msg.type==="done"){status(msg.message||"Extracción terminada.");$("bar").style.width="100%";$("csv").disabled=!rows.length;$("json").disabled=!rows.length}
-       if(msg.type==="error"){errors++;status("Error: "+msg.message);stats(pages,errors)}
-     }
-   }
- }catch(e){if(e.name!=="AbortError")status("Error: "+e.message)}
- finally{running=false;$("start").disabled=false;$("stop").disabled=true;aborter=null;$("csv").disabled=!rows.length;$("json").disabled=!rows.length}
-}
-$("start").onclick=run;
-$("stop").onclick=()=>{if(aborter)aborter.abort();status("Extracción detenida.");};
-$("csv").onclick=()=>download("gofly_catalogo.csv",csvText(),"text/csv;charset=utf-8");
-$("json").onclick=()=>download("gofly_catalogo.json",JSON.stringify(rows,null,2),"application/json;charset=utf-8");
-$("clear").onclick=()=>{if(running)return;rows=[];render();stats();status("Tabla limpiada.");$("bar").style.width="0%";$("csv").disabled=true;$("json").disabled=true};
+  const norm = s => String(s).toLowerCase().replace(/[\s._-]+/g,'');
+  const esc  = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+  function load(){ try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+  function save(c){ try { localStorage.setItem(KEY, JSON.stringify(c)); } catch {} }
+  function readForm(){
+    return { url:$('url').value.trim(), method:$('method').value, body:$('body').value.trim(),
+      proxy:$('proxy').value.trim(), fcode:$('fcode').value.trim(), fstock:$('fstock').value.trim(),
+      fdesc:$('fdesc').value.trim(), limit:Math.max(1,+$('limit').value||2), auto:Math.max(0,+$('auto').value||0),
+      codes:$('codes').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean), cred:$('cred').checked };
+  }
+  function fillForm(c){
+    $('url').value=c.url||''; $('method').value=c.method||'GET'; $('body').value=c.body||'';
+    $('proxy').value=c.proxy||''; $('fcode').value=c.fcode||''; $('fstock').value=c.fstock||'';
+    $('fdesc').value=c.fdesc||''; $('limit').value=c.limit||2; $('auto').value=c.auto||0;
+    $('codes').value=(c.codes||[]).join('\n'); $('cred').checked=!!c.cred;
+  }
+
+  // ---------- extracción de datos ----------
+  function findArray(x){
+    if (Array.isArray(x)) return x;
+    if (x && typeof x === 'object'){
+      for (const v of Object.values(x)){ const r = Array.isArray(v) ? v : findArray(v); if (Array.isArray(r) && r.length) return r; }
+    }
+    return null;
+  }
+  function pick(obj, forced, list, reject){
+    const keys = Object.keys(obj);
+    if (forced){ const k = keys.find(k => norm(k) === norm(forced)); return k ? obj[k] : undefined; }
+    for (const cand of list){
+      const k = keys.find(k => norm(k) === cand && !(reject && reject.test(k)));
+      if (k !== undefined) return obj[k];
+    }
+    return undefined;
+  }
+  function toNum(v){
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string'){ const m = v.replace(',', '.').match(/-?\d+(\.\d+)?/); if (m) return +m[0]; if (/sin\s*stock|agotado/i.test(v)) return 0; }
+    return null;
+  }
+  function fromJson(data, cfg, askedCode){
+    let arr = findArray(data);
+    if (!arr) arr = (data && typeof data === 'object') ? [data] : [];
+    return arr.filter(o => o && typeof o === 'object').map(o => {
+      const code = pick(o, cfg.fcode, CODE_KEYS) ?? askedCode ?? '';
+      const stock = toNum(pick(o, cfg.fstock, STOCK_KEYS, NOT_STOCK));
+      const desc = pick(o, cfg.fdesc, DESC_KEYS) ?? '';
+      return { code:String(code), stock, desc:String(desc) };
+    });
+  }
+  function fromHtml(text, askedCode){
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    const body = doc.body ? doc.body.textContent.replace(/\s+/g,' ') : text;
+    let stock = null;
+    const m = body.match(/stock[^0-9\-]{0,20}(-?\d+)/i);
+    if (m) stock = +m[1]; else if (/sin\s*stock/i.test(body)) stock = 0;
+    const h = doc.querySelector('h1,h2,h3,title');
+    return [{ code:askedCode||'', stock, desc:h ? h.textContent.trim() : '' }];
+  }
+  function parseResponse(text, cfg, askedCode){
+    try { return fromJson(JSON.parse(text), cfg, askedCode); } catch {}
+    return fromHtml(text, askedCode);
+  }
+
+  // ---------- red ----------
+  async function request(cfg, code){
+    let url = cfg.url.replace(/\{codigo\}/g, encodeURIComponent(code ?? ''));
+    if (cfg.proxy) url = cfg.proxy + encodeURIComponent(url);
+    const opt = { method:cfg.method, cache:'no-store' };
+    if (cfg.cred) opt.credentials = 'include';
+    if (cfg.method === 'POST'){
+      opt.body = cfg.body.replace(/\{codigo\}/g, code ?? '');
+      opt.headers = { 'Content-Type': /^\s*[\[{]/.test(cfg.body) ? 'application/json' : 'application/x-www-form-urlencoded' };
+    }
+    const r = await fetch(url, opt);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }
+
+  let busy = false, timer = null;
+  async function run(){
+    if (busy) return;
+    const cfg = readForm(); save(cfg);
+    setTitle(cfg.limit);
+    if (!cfg.url){ $('cfg').open = true; return showMsg('Falta la URL del endpoint de inventario.', true); }
+    busy = true; $('refresh').disabled = true; $('refresh').textContent = 'Consultando…';
+    const errors = []; let rows = [];
+    try {
+      if (/\{codigo\}/.test(cfg.url) || /\{codigo\}/.test(cfg.body)){
+        if (!cfg.codes.length){ $('cfg').open = true; throw new Error('El endpoint usa {codigo}: cargá al menos un código.'); }
+        const queue = [...cfg.codes];
+        await Promise.all(Array.from({length:4}, async () => {
+          while (queue.length){
+            const code = queue.shift();
+            try { rows.push(...parseResponse(await request(cfg, code), cfg, code)); }
+            catch(e){ errors.push(code + ': ' + e.message); }
+          }
+        }));
+      } else {
+        rows = parseResponse(await request(cfg, ''), cfg, '');
+        if (cfg.codes.length){ const set = new Set(cfg.codes.map(norm)); rows = rows.filter(r => set.has(norm(r.code))); }
+      }
+      render(rows, cfg.limit);
+      if (errors.length) showMsg('No se pudieron consultar ' + errors.length + ' código(s):', true, errors.slice(0,8));
+      else showMsg('');
+    } catch(e){
+      const cors = /Failed to fetch|NetworkError|Load failed/i.test(e.message);
+      showMsg(cors
+        ? 'El navegador bloqueó la consulta (CORS o sesión). Probá el campo "Proxy CORS", activá "Enviar cookies" o abrí el HTML logueado en tienda.goflymx.com.'
+        : e.message, true);
+    } finally {
+      busy = false; $('refresh').disabled = false; $('refresh').textContent = 'Actualizar';
+    }
+  }
+
+  // ---------- render ----------
+  function setTitle(n){ $('title').textContent = 'Stock menor a ' + n + ' unidades'; }
+  function showMsg(text, isErr, list){
+    $('msg').innerHTML = text ? '<div class="msg' + (isErr ? ' err' : '') + '">' + esc(text) +
+      (list ? '<ul>' + list.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '') + '</div>' : '';
+  }
+  function render(rows, limit){
+    const low  = rows.filter(r => r.stock !== null && r.stock < limit).sort((a,b) => a.stock - b.stock || a.code.localeCompare(b.code));
+    const nodata = rows.filter(r => r.stock === null).length;
+    $('cq').textContent = rows.length; $('cl').textContent = low.length; $('cn').textContent = nodata;
+    $('ts').textContent = new Date().toLocaleString('es-AR');
+    if (!rows.length){ $('out').innerHTML = '<div class="empty"><b>La respuesta no trajo productos</b>Revisá la URL o los nombres de campo en la configuración.</div>'; return; }
+    if (!low.length){ $('out').innerHTML = '<div class="empty"><b>Ningún producto con stock menor a ' + limit + '</b>' +
+      (nodata ? nodata + ' respuesta(s) sin cantidad numérica: indicá el campo de stock en la configuración.' : 'Todo el inventario consultado está por encima del límite.') + '</div>'; return; }
+    $('out').innerHTML = '<table><thead><tr><th>Código</th><th>Stock</th><th>Descripción</th></tr></thead><tbody>' +
+      low.map(r => '<tr><td class="code">' + esc(r.code) + '</td><td class="stock"><span class="pill ' + (r.stock <= 0 ? 's0' : 's1') + '">' +
+      esc(r.stock) + '</span></td><td>' + esc(r.desc || '—') + '</td></tr>').join('') + '</tbody></table>';
+  }
+
+  function schedule(){
+    clearInterval(timer); const s = readForm().auto;
+    if (s > 0) timer = setInterval(run, s * 1000);
+  }
+
+  $('refresh').onclick = () => { run(); schedule(); };
+  $('save').onclick = () => { run(); schedule(); };
+  $('demo').onclick = () => {
+    const lim = readForm().limit;
+    setTitle(lim);
+    render([
+      {code:'ABC123', stock:1, desc:'Ejemplo: producto de muestra'},
+      {code:'XYZ456', stock:0, desc:'Ejemplo: producto sin stock'},
+      {code:'KTKIT530-042', stock:1, desc:'Ejemplo: kit de muestra'},
+      {code:'OK-999', stock:14, desc:'Ejemplo: no aparece (stock alto)'}
+    ], lim);
+    showMsg('Datos de ejemplo. Configurá el endpoint real para ver el inventario.', false);
+  };
+
+  // Al abrir o recargar la página (F5) vuelve a consultar el endpoint
+  fillForm(load());
+  setTitle(readForm().limit);
+  if (readForm().url){ run(); schedule(); } else { $('cfg').open = true; }
+})();
 </script>
 </body>
 </html>
