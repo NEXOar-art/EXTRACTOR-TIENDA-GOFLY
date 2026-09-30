@@ -1,9 +1,157 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GoFlyMX - Stock menor a 2</title><style>
-body{margin:0;background:#0b0d10;color:#eee;font:15px Arial}.wrap{max-width:900px;margin:30px auto;padding:20px}.card{background:#15191e;border:1px solid #303740;border-radius:16px;padding:22px;box-shadow:0 15px 45px #0008}h1{margin-top:0}.sub{color:#aeb7c0}.grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:20px 0}.field label{display:block;color:#aeb7c0;font-size:12px;margin-bottom:5px}.field input{width:100%;padding:11px;border-radius:9px;border:1px solid #303740;background:#0d1115;color:#fff;box-sizing:border-box}.buttons{display:flex;gap:10px;flex-wrap:wrap}button{padding:12px 16px;border:0;border-radius:9px;background:#303740;color:#fff;font-weight:bold;cursor:pointer}button.primary{background:#e53935}button:disabled{opacity:.45}.status{margin:16px 0;padding:12px;background:#0d1115;border:1px solid #303740;border-radius:9px}.bar{height:7px;background:#303740;border-radius:9px;overflow:hidden}.bar i{display:block;width:0;height:100%;background:#e53935}.count{margin:15px 0;color:#aeb7c0}.count b{color:#fff}.list{border:1px solid #303740;border-radius:12px;overflow:hidden}.row{display:grid;grid-template-columns:1fr 180px;padding:13px 16px;border-bottom:1px solid #303740}.row.head{background:#20262d;font-weight:bold}.row:last-child{border-bottom:0}.stock{font-weight:bold}.sin{color:#ffbd5a}.normal{color:#65d47e}.empty{padding:30px;text-align:center;color:#89949f}.note{font-size:12px;color:#89949f;margin-top:14px;line-height:1.5}@media(max-width:700px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 120px}}
-</style></head><body><div class="wrap"><div class="card"><h1>Stock GoFlyMX &lt; 2 unidades</h1><div class="sub">Hace REQUEST al catálogo y muestra únicamente <b>CÓDIGO + STOCK</b>. Todo lo demás se descarta.</div><div class="grid"><div class="field"><label>URL</label><input id="origin" value="https://tienda.goflymx.com/"></div><div class="field"><label>Máx. páginas</label><input id="maxPages" type="number" value="1000"></div><div class="field"><label>REQUEST simultáneos</label><input id="concurrency" type="number" value="3" min="1" max="8"></div></div><div class="buttons"><button class="primary" id="start">CONSULTAR STOCK &lt; 2</button><button id="stop" disabled>DETENER</button><button id="csv" disabled>DESCARGAR CSV</button><button id="clear">LIMPIAR</button></div><div class="bar"><i id="bar"></i></div><div class="status" id="status">Listo. SIN STOCK será tratado como 1.</div><div class="count">Coincidencias: <b id="count">0</b></div><div class="list"><div class="row head"><div>CÓDIGO</div><div>STOCK</div></div><div id="list"><div class="empty">Todavía no hay resultados.</div></div></div><div class="note">Regla: solo se muestran valores numéricos menores a 2. Si GoFlyMX devuelve “SIN STOCK” o “PRODUCTO NO DISPONIBLE”, se convierte a <b>1</b>. No se usa “Min. Vta.” ni “Max Vta.” como stock.</div></div></div><script>
-let rows=[],controller=null;const $=x=>document.getElementById(x);const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function render(){if(!rows.length){$('list').innerHTML='<div class="empty">No se encontraron códigos con stock menor a 2.</div>'}else{$('list').innerHTML=rows.map(r=>`<div class="row"><div><b>${esc(r.codigo)}</b></div><div class="stock ${r.sinStock?'sin':'normal'}">${esc(r.stock)}</div></div>`).join('')}$('count').textContent=rows.length}
-function csv(){let out='\ufeffCÓDIGO;STOCK\r\n';out+=rows.map(r=>'"'+String(r.codigo).replaceAll('"','""')+'";"'+String(r.stock).replaceAll('"','""')+'"').join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([out],{type:'text/csv;charset=utf-8'}));a.download='gofly_stock_menor_2.csv';a.click()}
-$('start').onclick=async()=>{rows=[];render();$('start').disabled=true;$('stop').disabled=false;$('csv').disabled=true;$('bar').firstElementChild.style.width='0';controller=new AbortController();try{let r=await fetch('/api/stock',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({origin:$('origin').value,maxPages:+$('maxPages').value||1000,concurrency:+$('concurrency').value||3}),signal:controller.signal});if(!r.ok)throw Error(await r.text());let reader=r.body.getReader(),decoder=new TextDecoder(),buf='';while(1){let x=await reader.read();if(x.done)break;buf+=decoder.decode(x.value,{stream:true});let a=buf.split('\n');buf=a.pop();for(let line of a){if(!line.trim())continue;let m=JSON.parse(line);if(m.type==='product'){rows.push(m.data);render()}if(m.type==='progress'){$('status').textContent=m.message;$('bar').firstElementChild.style.width=(m.percent||0)+'%'}if(m.type==='done'){$('status').textContent=m.message;$('bar').firstElementChild.style.width='100%'}}}}catch(e){if(e.name!=='AbortError')$('status').textContent='Error: '+e.message}else{}finally{$('start').disabled=false;$('stop').disabled=true;$('csv').disabled=!rows.length;controller=null}};
-$('stop').onclick=()=>{if(controller)controller.abort();$('status').textContent='REQUEST detenido.'};$('csv').onclick=csv;$('clear').onclick=()=>{rows=[];render();$('status').textContent='Lista limpiada.';$('csv').disabled=true;$('bar').firstElementChild.style.width='0'};render();
-</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GoFlyMX — Stock menor a 2</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090b0e;color:#f2f4f6;font:15px Arial,sans-serif}
+.wrap{max-width:980px;margin:28px auto;padding:16px}.card{background:#15191e;border:1px solid #303740;border-radius:16px;padding:22px;box-shadow:0 15px 45px #0008}
+h1{margin:0 0 7px}.sub{color:#aeb7c0;line-height:1.5}
+.grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin:20px 0}.field label{display:block;color:#aeb7c0;font-size:12px;margin-bottom:5px}.field input{width:100%;padding:11px;border-radius:9px;border:1px solid #303740;background:#0d1115;color:#fff}
+.buttons{display:flex;gap:10px;flex-wrap:wrap}button{padding:12px 16px;border:0;border-radius:9px;background:#303740;color:#fff;font-weight:bold;cursor:pointer}button.primary{background:#e53935}button:disabled{opacity:.45;cursor:not-allowed}
+.status{margin:16px 0 10px;padding:13px;background:#0d1115;border:1px solid #303740;border-radius:9px;white-space:pre-wrap}
+.progress{height:8px;background:#303740;border-radius:9px;overflow:hidden}.progress i{display:block;width:0;height:100%;background:#e53935;transition:width .2s}
+.count{margin:15px 0;color:#aeb7c0}.count b{color:#fff}.list{border:1px solid #303740;border-radius:12px;overflow:hidden}.row{display:grid;grid-template-columns:1fr 220px;padding:13px 16px;border-bottom:1px solid #303740}.row:last-child{border-bottom:0}.head{background:#20262d;font-weight:bold}.stock{font-weight:bold}.sin{color:#ffbd5a}.normal{color:#65d47e}.empty{padding:32px;text-align:center;color:#89949f}.note{font-size:12px;color:#89949f;margin-top:14px;line-height:1.55}
+.ok{color:#65d47e}.bad{color:#ff7373}@media(max-width:700px){.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr 135px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<h1>GoFlyMX — Códigos con stock menor a 2</h1>
+<div class="sub">Hace REQUEST al catálogo y muestra únicamente <b>CÓDIGO + STOCK</b>. <b>SIN STOCK = 1</b>. No muestra productos, precios, marcas ni descripciones.</div>
+
+<div class="grid">
+  <div class="field"><label>URL de origen</label><input id="origin" value="https://tienda.goflymx.com/"></div>
+  <div class="field"><label>Máximo de páginas</label><input id="maxPages" type="number" value="1000" min="1" max="10000"></div>
+  <div class="field"><label>REQUEST simultáneos</label><input id="concurrency" type="number" value="3" min="1" max="8"></div>
+</div>
+
+<div class="buttons">
+<button class="primary" id="start">CONSULTAR STOCK &lt; 2</button>
+<button id="stop" disabled>DETENER</button>
+<button id="csv" disabled>DESCARGAR CSV</button>
+<button id="clear">LIMPIAR</button>
+</div>
+
+<div class="status" id="status">Comprobando conexión con el extractor local...</div>
+<div class="progress"><i id="bar"></i></div>
+<div class="count">Coincidencias: <b id="count">0</b></div>
+
+<div class="list">
+<div class="row head"><div>CÓDIGO</div><div>STOCK</div></div>
+<div id="list"><div class="empty">Esperando consulta...</div></div>
+</div>
+
+<div class="note">
+Regla principal: solo pasan valores de stock <b>menores a 2</b>. Cuando GoFlyMX muestra
+<b>SIN STOCK</b> o <b>PRODUCTO NO DISPONIBLE</b>, se normaliza a <b>1</b>.
+No se utilizan “Min. Vta.” ni “Max Vta.” como stock.
+</div>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=x=>String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+let rows=[], controller=null, running=false;
+
+function render(){
+  $("count").textContent=rows.length;
+  $("list").innerHTML=rows.length
+    ? rows.map(r=>`<div class="row"><div><b>${esc(r.codigo)}</b></div><div class="stock ${r.sinStock?"sin":"normal"}">${esc(r.stock)}</div></div>`).join("")
+    : '<div class="empty">No se encontraron códigos con stock menor a 2.</div>';
+}
+
+function setStatus(t,cls=""){ $("status").className="status "+cls; $("status").textContent=t; }
+function setProgress(n){ $("bar").style.width=Math.max(0,Math.min(100,n))+"%"; }
+
+async function checkHealth(){
+  try{
+    const r=await fetch("/api/health",{cache:"no-store"});
+    if(!r.ok) throw Error("HTTP "+r.status);
+    const j=await r.json();
+    setStatus("Extractor conectado correctamente. Presioná «CONSULTAR STOCK < 2».","ok");
+  }catch(e){
+    setStatus("El HTML está abierto, pero NO está conectado al servidor extractor.\n\nEjecutá:\nnpm install\nnpm start\n\ny abrí http://localhost:3000","bad");
+  }
+}
+
+async function start(){
+  if(running)return;
+  running=true; rows=[]; render(); setProgress(0);
+  $("start").disabled=true; $("stop").disabled=false; $("csv").disabled=true;
+  controller=new AbortController();
+
+  const payload={
+    origin:$("origin").value.trim(),
+    maxPages:Number($("maxPages").value)||1000,
+    concurrency:Number($("concurrency").value)||3
+  };
+
+  try{
+    const response=await fetch("/api/stock",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload),
+      signal:controller.signal
+    });
+    if(!response.ok) throw Error(await response.text());
+
+    const reader=response.body.getReader();
+    const decoder=new TextDecoder();
+    let buffer="";
+
+    while(true){
+      const part=await reader.read();
+      if(part.done)break;
+      buffer+=decoder.decode(part.value,{stream:true});
+      const lines=buffer.split("\n");
+      buffer=lines.pop();
+
+      for(const line of lines){
+        if(!line.trim())continue;
+        let msg;
+        try{msg=JSON.parse(line)}catch{continue}
+
+        if(msg.type==="progress"){
+          setProgress(msg.percent||0);
+          setStatus(msg.message||"Procesando...");
+        }
+        if(msg.type==="product"){
+          rows.push(msg.data);
+          render();
+        }
+        if(msg.type==="error"){
+          setStatus("ERROR: "+msg.message,"bad");
+        }
+        if(msg.type==="done"){
+          setProgress(100);
+          setStatus(msg.message||"Proceso terminado.", "ok");
+        }
+      }
+    }
+  }catch(e){
+    if(e.name==="AbortError") setStatus("REQUEST detenido por el usuario.");
+    else setStatus("ERROR DE CONEXIÓN:\n"+e.message+"\n\nVerificá que server.js esté ejecutándose en http://localhost:3000","bad");
+  }finally{
+    running=false; controller=null;
+    $("start").disabled=false; $("stop").disabled=true; $("csv").disabled=!rows.length;
+  }
+}
+
+function downloadCSV(){
+  let out="\ufeffCÓDIGO;STOCK\r\n";
+  out+=rows.map(r=>`"${String(r.codigo).replaceAll('"','""')}";"${String(r.stock).replaceAll('"','""')}"`).join("\r\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([out],{type:"text/csv;charset=utf-8"}));
+  a.download="gofly_stock_menor_2.csv"; a.click();
+}
+
+$("start").onclick=start;
+$("stop").onclick=()=>{if(controller)controller.abort()};
+$("csv").onclick=downloadCSV;
+$("clear").onclick=()=>{rows=[];render();setProgress(0);setStatus("Lista limpiada.")};
+render(); checkHealth();
+</script>
+</body>
+</html>
