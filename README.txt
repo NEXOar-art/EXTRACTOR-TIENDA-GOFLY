@@ -1,45 +1,14 @@
-# Extractor de catálogo GoFlyMX
+GOFLYMX STOCK < 2
 
-Extrae del catálogo público de GoFlyMX:
+Este proyecto NO extrae ni muestra producto, descripcion, precio, marca o imagen.
+Hace REQUEST a las fichas del catalogo y devuelve solamente:
+CÓDIGO + STOCK.
 
-- TIPO / CATEGORÍA
-- PRODUCTO
-- STOCK
-- DESCRIPCIÓN
+Filtro obligatorio: stock < 2.
+SIN STOCK / PRODUCTO NO DISPONIBLE = 1.
 
-No exporta precio, código, marca ni imágenes.
-
-## Requisitos
-
-Node.js 18 o superior.
-
-## Instalación
-
-1. Abrí una terminal dentro de esta carpeta.
-2. Ejecutá:
-
-```bash
+Instalacion:
 npm install
 npm start
-```
 
-3. Abrí en el navegador:
-
-http://localhost:3000
-
-4. Presioná "EXTRAER TODO EL CATÁLOGO".
-
-## Exportación
-
-El panel permite descargar:
-
-- CSV compatible con Excel.
-- JSON.
-
-## Importante
-
-El navegador por sí solo no puede hacer scraping directo de otro dominio cuando el servidor remoto no habilita CORS. Por eso `server.js` hace la descarga y el HTML se comunica con ese servidor local.
-
-El extractor recorre enlaces internos del catálogo, detecta fichas `.html`, visita cada ficha y busca selectores comunes para nombre, stock y descripción. Como la estructura de una tienda puede cambiar, los selectores están centralizados en `server.js` para poder ajustarlos fácilmente.
-
-Usá el extractor respetando los términos de uso, robots.txt y límites razonables del sitio de origen.
+Abrir http://localhost:3000

@@ -1,0 +1,1 @@
+{"name":"gofly-stock-menor-2","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"cheerio":"^1.0.0","express":"^4.21.2"}}
